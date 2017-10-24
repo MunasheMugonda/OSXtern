@@ -1,0 +1,57 @@
+---
+title: "OSXtern"
+author: "Munashe Mugonda"
+date: "10/23/2017"
+output: html_document
+---
+
+```{r, message=FALSE}
+require(fastR2)
+library(readr)
+```
+#1. Import dataset,
+#Add columns for Month(1,2 …12), day(Monday, Tuesday… Sunday), time (hour:min), weekend(true if it’s a Saturday/Sunday)
+```{r}
+checkin_dataset <- read_csv("~/Downloads/checkin_dataset.csv")
+timestampDate <- as.POSIXct(checkin_dataset$timestamp, format = "%Y-%m-%d %I:%M")
+month <- format(timestampDate, "%m")
+day <- weekdays(timestampDate)
+weekend <- (day == "Saturday" | day == "Sunday")
+hour <- format(timestampDate, "%H")
+checkin_dataset <- cbind(checkin_dataset, month, day,hour, weekend)
+```
+
+#2. Find the distribution of people over the coordinates
+```{r}
+range(checkin_dataset$xcoordinate)
+range(checkin_dataset$ycoordinate)
+plot(checkin_dataset$xcoordinate, checkin_dataset$ycoordinate)
+```
+
+People are more concetratated in three different zones as shown by the clusters in the plot.
+
+#3. Which is the distribution of people during weekdays vs weekends.
+```{r}
+weekendSubset <- subset(checkin_dataset, (checkin_dataset$weekend == TRUE))
+weekdaySubset <- subset(checkin_dataset, (checkin_dataset$weekend == FALSE))
+plot(weekendSubset$xcoordinate, weekendSubset$ycoordinate, col = "red", xlab = "xcordinate", ylab = "ycoordinate")
+par(new=TRUE)
+plot(weekdaySubset$xcoordinate, weekdaySubset$ycoordinate, col = "green", xlab = "xcordinate", ylab = "ycoordinate")
+```
+
+The distribution of people is not affected by weather it's a  weekend or a weekday.
+
+#4. Which is the distribution of people during morning times(5-9), afternoon(11-14), evening(18-22), latenight(23-3)
+```{r}
+hour_part <- function(x) as.numeric(sub(":.*", "", x))
+morning <- subset(checkin_dataset, (ifelse(hour_part(checkin_dataset$hour) >= 5 & hour_part(checkin_dataset$hour) <= 9,1,0)) == 1)
+afternoon <- subset(checkin_dataset, (ifelse(hour_part(checkin_dataset$hour) >= 11 & hour_part(checkin_dataset$hour) <= 14,1,0)) == 1)
+evening <- subset(checkin_dataset, (ifelse(hour_part(checkin_dataset$hour) >= 18 & hour_part(checkin_dataset$hour) < 22,1,0)) == 1)
+plot(morning$xcoordinate, morning$ycoordinate, col = "red", xlab = "xcordinate", ylab = "ycoordinate")
+par(new=TRUE)
+plot(afternoon$xcoordinate, afternoon$ycoordinate, col = "green", xlab = "xcordinate", ylab = "ycoordinate")
+par(new=TRUE)
+plot(evening$xcoordinate, evening$ycoordinate, col = "purple", xlab = "xcordinate", ylab = "ycoordinate")
+```
+
+The distribution of where people are located does not change with time.
